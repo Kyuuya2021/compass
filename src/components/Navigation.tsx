@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
-type View = 'dashboard' | 'goals' | 'tasks' | 'progress' | 'future-vision';
+type View = 'dashboard' | 'goals' | 'tasks' | 'progress' | 'future-vision' | 'future-vision-dashboard';
 
 interface NavigationProps {
   currentView: View;
@@ -32,6 +32,7 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
     { id: 'tasks' as View, label: 'タスク管理', icon: CheckSquare },
     { id: 'progress' as View, label: '進捗分析', icon: TrendingUp },
     { id: 'future-vision' as View, label: '将来指針', icon: Sparkles },
+    { id: 'future-vision-dashboard' as View, label: '指針ダッシュボード', icon: Compass },
   ];
 
   return (

@@ -5,6 +5,7 @@ import { AIOnboarding } from './components/AIOnboarding';
 import { FutureVisionChat } from './components/FutureVisionChat';
 import { VisionResult } from './components/VisionResult';
 import { GoalManagement } from './components/GoalManagement';
+import { FutureVisionDashboard } from './components/FutureVisionDashboard';
 
 interface VisionData {
   shortTerm: string[];
@@ -23,7 +24,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GoalProvider } from './contexts/GoalContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
-type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result';
+type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result' | 'future-vision-dashboard';
 
 function AppContent() {
   const { user, isAuthenticated } = useAuth();
@@ -55,7 +56,7 @@ function AppContent() {
       <FutureVisionChat 
         onComplete={(data) => {
           setVisionData(data);
-          setCurrentView('vision-result');
+          setCurrentView('future-vision-dashboard');
         }}
         onBack={() => setCurrentView('dashboard')}
       />
@@ -82,6 +83,7 @@ function AppContent() {
         {currentView === 'tasks' && <TaskManagement />}
         {currentView === 'progress' && <ProgressView />}
         {currentView === 'time' && <TimeManagement />}
+        {currentView === 'future-vision-dashboard' && <FutureVisionDashboard />}
       </main>
     </div>
   );
