@@ -49,7 +49,7 @@ interface VisionData {
 
 export function FutureVisionDashboard() {
   const { user } = useAuth();
-  const { goals, tasks, getTodaysTasks } = useGoals();
+  const { goals, tasks, getTodaysTasks, updateTask, calculateTaskImpactScore, getTaskHierarchyPath } = useGoals();
   const [visionData, setVisionData] = useState<VisionData | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month'>('day');
   const [dailyReflection, setDailyReflection] = useState({

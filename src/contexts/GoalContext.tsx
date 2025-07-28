@@ -35,6 +35,12 @@ export interface Task {
   };
   scheduledStart?: string;
   scheduledEnd?: string;
+  visionConnection?: {
+    coreVisionRelevance: string;
+    valueAlignment: string[];
+    impactScore: number; // 0-10
+    whyStatement: string;
+  };
 }
 
 interface GoalContextType {
@@ -48,6 +54,10 @@ interface GoalContextType {
   deleteTask: (id: string) => void;
   getGoalHierarchy: (goalId: string) => Goal[];
   getTodaysTasks: () => Task[];
+  getTasksWithVisionConnection: () => Task[];
+  updateTaskVisionConnection: (taskId: string, connection: Task['visionConnection']) => void;
+  calculateTaskImpactScore: (task: Task) => number;
+  getTaskHierarchyPath: (taskId: string) => { vision: string; goal: string; task: string };
 }
 
 const GoalContext = createContext<GoalContextType | undefined>(undefined);
@@ -104,7 +114,13 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       priority: 'high',
       status: 'pending',
       scheduledStart: '2025-01-29T08:30:00',
-      scheduledEnd: '2025-01-29T09:00:00'
+      scheduledEnd: '2025-01-29T09:00:00',
+      visionConnection: {
+        coreVisionRelevance: '国際的なコミュニケーション能力向上',
+        valueAlignment: ['成長・学習', '社会貢献'],
+        impactScore: 7.5,
+        whyStatement: 'グローバルに活躍するエンジニアとして、英語でのコミュニケーション能力は必須スキル'
+      }
     },
     {
       id: '2',
@@ -118,7 +134,13 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       priority: 'high',
       status: 'pending',
       scheduledStart: '2025-01-29T18:30:00',
-      scheduledEnd: '2025-01-29T19:00:00'
+      scheduledEnd: '2025-01-29T19:00:00',
+      visionConnection: {
+        coreVisionRelevance: '国際的なコミュニケーション能力向上',
+        valueAlignment: ['成長・学習'],
+        impactScore: 6.8,
+        whyStatement: '英語での情報収集能力を高め、最新技術トレンドをキャッチアップ'
+      }
     },
     {
       id: '3',
@@ -132,7 +154,53 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       priority: 'medium',
       status: 'pending',
       scheduledStart: '2025-01-29T20:00:00',
-      scheduledEnd: '2025-01-29T21:00:00'
+      scheduledEnd: '2025-01-29T21:00:00',
+      visionConnection: {
+        coreVisionRelevance: '革新的ソリューション提供力の強化',
+        valueAlignment: ['成長・学習', '創造・革新'],
+        impactScore: 8.2,
+        whyStatement: '最新技術を習得し、より効率的で革新的なソリューションを提供'
+      }
+    },
+    {
+      id: '4',
+      title: '技術ブログ記事執筆',
+      description: '今週学んだReact Hooksについてまとめる',
+      goalId: '2',
+      dueDate: '2025-01-29',
+      dueTime: '21:30',
+      estimatedDuration: 45,
+      timeGranularity: 'daily',
+      priority: 'medium',
+      status: 'pending',
+      scheduledStart: '2025-01-29T21:30:00',
+      scheduledEnd: '2025-01-29T22:15:00',
+      visionConnection: {
+        coreVisionRelevance: '知識共有による社会貢献',
+        valueAlignment: ['社会貢献', '成長・学習'],
+        impactScore: 6.5,
+        whyStatement: '学んだ知識を共有し、他のエンジニアの成長をサポート'
+      }
+    },
+    {
+      id: '5',
+      title: '家族との夕食時間',
+      description: '今日の出来事を共有し、家族との時間を大切にする',
+      goalId: '1',
+      dueDate: '2025-01-29',
+      dueTime: '18:00',
+      estimatedDuration: 60,
+      timeGranularity: 'daily',
+      priority: 'high',
+      status: 'pending',
+      scheduledStart: '2025-01-29T18:00:00',
+      scheduledEnd: '2025-01-29T19:00:00',
+      visionConnection: {
+        coreVisionRelevance: '家族との時間を大切にするライフスタイル',
+        valueAlignment: ['家族・関係', '自律・自由'],
+        impactScore: 9.1,
+        whyStatement: '理想のワークライフバランスを実現し、大切な人との絆を深める'
+      }
     }
   ]);
 
@@ -187,6 +255,54 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const getTasksWithVisionConnection = () => {
+    return tasks.filter(task => task.visionConnection);
+  };
+
+  const updateTaskVisionConnection = (taskId: string, connection: Task['visionConnection']) => {
+    setTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, visionConnection: connection } : task
+    ));
+  };
+
+  const calculateTaskImpactScore = (task: Task): number => {
+    if (task.visionConnection) {
+      return task.visionConnection.impactScore;
+    }
+    
+    // デフォルトスコア計算ロジック
+    let score = 5.0; // ベーススコア
+    
+    // 優先度による調整
+    if (task.priority === 'high') score += 2.0;
+    else if (task.priority === 'low') score -= 1.0;
+    
+    // 目標との関連性
+    const relatedGoal = goals.find(g => g.id === task.goalId);
+    if (relatedGoal) {
+      if (relatedGoal.type === 'vision') score += 3.0;
+      else if (relatedGoal.type === 'long-term') score += 2.0;
+      else if (relatedGoal.type === 'mid-term') score += 1.0;
+    }
+    
+    return Math.min(10, Math.max(0, score));
+  };
+
+  const getTaskHierarchyPath = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return { vision: '', goal: '', task: '' };
+    
+    const relatedGoal = goals.find(g => g.id === task.goalId);
+    const hierarchy = relatedGoal ? getGoalHierarchy(relatedGoal.id) : [];
+    
+    const visionGoal = hierarchy.find(g => g.type === 'vision');
+    
+    return {
+      vision: visionGoal?.title || 'グローバルに活躍するエンジニアになる',
+      goal: relatedGoal?.title || '',
+      task: task.title
+    };
+  };
   return (
     <GoalContext.Provider value={{
       goals,
@@ -198,7 +314,11 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       updateTask,
       deleteTask,
       getGoalHierarchy,
-      getTodaysTasks
+      getTodaysTasks,
+      getTasksWithVisionConnection,
+      updateTaskVisionConnection,
+      calculateTaskImpactScore,
+      getTaskHierarchyPath
     }}>
       {children}
     </GoalContext.Provider>
