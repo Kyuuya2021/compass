@@ -18,7 +18,7 @@ import {
   Zap,
   Users,
   Home,
-  Globe
+  Globe,
   Plus,
   X
 } from 'lucide-react';
