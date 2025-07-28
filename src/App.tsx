@@ -2,19 +2,33 @@ import React, { useState, useEffect } from 'react';
 import { Navigation } from './components/Navigation';
 import { Dashboard } from './components/Dashboard';
 import { AIOnboarding } from './components/AIOnboarding';
+import { FutureVisionChat } from './components/FutureVisionChat';
+import { VisionResult } from './components/VisionResult';
 import { GoalManagement } from './components/GoalManagement';
+
+interface VisionData {
+  shortTerm: string[];
+  mediumTerm: string[];
+  longTerm: string[];
+  coreValues: string[];
+  motivation: string;
+  obstacles: string[];
+  resources: string[];
+}
 import { TaskManagement } from './components/TaskManagement';
+import { TimeManagement } from './components/TimeManagement';
 import { ProgressView } from './components/ProgressView';
 import { LandingPage } from './components/LandingPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GoalProvider } from './contexts/GoalContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
-type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress';
+type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result';
 
 function AppContent() {
   const { user, isAuthenticated } = useAuth();
   const [currentView, setCurrentView] = useState<View>('landing');
+  const [visionData, setVisionData] = useState<VisionData | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -34,6 +48,28 @@ function AppContent() {
 
   if (currentView === 'onboarding') {
     return <AIOnboarding onComplete={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'future-vision') {
+    return (
+      <FutureVisionChat 
+        onComplete={(data) => {
+          setVisionData(data);
+          setCurrentView('vision-result');
+        }}
+        onBack={() => setCurrentView('dashboard')}
+      />
+    );
+  }
+
+  if (currentView === 'vision-result' && visionData) {
+    return (
+      <VisionResult 
+        visionData={visionData}
+        onEdit={() => setCurrentView('future-vision')}
+        onBack={() => setCurrentView('dashboard')}
+      />
+    );
   }
 
   return (

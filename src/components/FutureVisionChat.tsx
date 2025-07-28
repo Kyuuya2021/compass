@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Heart, Target, Lightbulb, Star, Mic, Plus, Globe } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Target, Lightbulb, Star, Mic, Plus, Globe, Calendar, TrendingUp, Heart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { GlassFilter } from './ui/liquid-glass';
@@ -17,40 +17,46 @@ interface Message {
   text: string;
   sender: 'ai' | 'user';
   timestamp: Date;
+  type?: 'vision' | 'goal' | 'action' | 'timeline';
 }
 
-interface UserResponses {
+interface VisionData {
+  shortTerm: string[];
+  mediumTerm: string[];
+  longTerm: string[];
   coreValues: string[];
-  futureVision: string;
-  currentChallenges: string[];
-  immediateGoals: string[];
   motivation: string;
+  obstacles: string[];
+  resources: string[];
 }
 
-interface AIOnboardingProps {
-  onComplete: () => void;
+interface FutureVisionChatProps {
+  onComplete?: (visionData: VisionData) => void;
+  onBack?: () => void;
 }
 
-export function AIOnboarding({ onComplete }: AIOnboardingProps) {
-  const { updateUser } = useAuth();
+export function FutureVisionChat({ onComplete, onBack }: FutureVisionChatProps) {
   const { theme, toggleTheme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'こんにちは！私はあなた専属のAIコーチです。🎯\n\nこれからあなたの価値観と理想像を一緒に発見して、人生のコンパスを作りましょう。\n\nまず、人生で最も大切にしたい価値観を3つ教えてください。例えば「成長」「家族」「貢献」など、あなたの心に響く言葉で構いません。',
+      text: 'こんにちは！あなたの将来指針を作成するお手伝いをさせていただきます。🎯\n\nまず、あなたが3年後に達成したい最も重要な目標を教えてください。\n\n具体的に想像してみてください：\n• 仕事では何をしている？\n• プライベートではどんな時間を過ごしている？\n• 周りの人からはどう見られている？\n\n自由に語ってください。',
       sender: 'ai',
-      timestamp: new Date()
+      timestamp: new Date(),
+      type: 'vision'
     }
   ]);
   const [currentInput, setCurrentInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [step, setStep] = useState(1);
-  const [userResponses, setUserResponses] = useState<UserResponses>({
+  const [visionData, setVisionData] = useState<VisionData>({
+    shortTerm: [],
+    mediumTerm: [],
+    longTerm: [],
     coreValues: [],
-    futureVision: '',
-    currentChallenges: [],
-    immediateGoals: [],
-    motivation: ''
+    motivation: '',
+    obstacles: [],
+    resources: []
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -64,26 +70,32 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
 
   const aiResponses = {
     1: (userInput: string) => {
-      const values = userInput.split(/[,、]/).map(v => v.trim()).filter(v => v);
-      setUserResponses(prev => ({ ...prev, coreValues: values }));
-      return `素晴らしい価値観ですね！「${values.join('」「')}」を大切にされているのですね。✨\n\n次に、5年後のあなたはどのような状況にいると充実感を感じるでしょうか？\n\n具体的に想像してみてください：\n• 仕事では何をしている？\n• プライベートではどんな時間を過ごしている？\n• 周りの人からはどう見られている？\n\n自由に語ってください。`;
+      setVisionData(prev => ({ ...prev, longTerm: [userInput] }));
+      return `素晴らしいビジョンですね！「${userInput}」という3年後の目標に向かって歩んでいく姿が目に浮かびます。🌟\n\n次に、その目標を達成するために、1年以内に達成したい具体的な目標を3つ教えてください。\n\n例えば：\n• スキルアップ（資格取得、技術習得など）\n• 人間関係（ネットワーク構築、コミュニケーション改善など）\n• 健康・生活習慣（運動、食事、睡眠など）\n\nできるだけ具体的で測定可能な目標にしてください。`;
     },
     2: (userInput: string) => {
-      setUserResponses(prev => ({ ...prev, futureVision: userInput }));
-      return `とても具体的で魅力的なビジョンですね！「${userInput}」という理想に向かって歩んでいく姿が目に浮かびます。🌟\n\nでは、現在の状況とその理想とのギャップで、最も重要だと感じる課題は何でしょうか？\n\n複数あれば、最も大きなものから教えてください。`;
+      const goals = userInput.split(/[,、]/).map(g => g.trim()).filter(g => g);
+      setVisionData(prev => ({ ...prev, mediumTerm: goals }));
+      return `とても具体的な目標ですね！「${goals.join('」「')}」を1年以内に達成する計画を立てましょう。📅\n\nでは、これらの目標を達成するために、今月から3ヶ月以内に取り組みたい具体的なアクションを教えてください。\n\n例えば：\n• 毎日30分英語学習する\n• 週2回ジムに通う\n• 月1回セミナーに参加する\n\nできるだけ具体的で実行可能なアクションにしてください。`;
     },
     3: (userInput: string) => {
-      const challenges = userInput.split(/[,、]/).map(c => c.trim()).filter(c => c);
-      setUserResponses(prev => ({ ...prev, currentChallenges: challenges }));
-      return `なるほど、「${challenges.join('」「')}」が現在の主な課題なのですね。\n\nでは、この課題を解決するために、まず今年中に達成したい具体的な目標を1つ教えてください。\n\nできるだけ具体的で、測定可能な目標にしてください。例えば「毎日30分英語学習する」など。`;
+      const actions = userInput.split(/[,、]/).map(a => a.trim()).filter(a => a);
+      setVisionData(prev => ({ ...prev, shortTerm: actions }));
+      return `素晴らしいアクションプランですね！「${actions.join('」「')}」を3ヶ月以内に実行していくことで、大きな変化が期待できます。💪\n\n次に、あなたの価値観や信念で、この目標達成を支える最も重要なものは何でしょうか？\n\n例えば：\n• 成長への情熱\n• 家族への愛\n• 社会貢献への使命感\n• 自己実現への欲求\n\n心の奥底にある原動力を教えてください。`;
     },
     4: (userInput: string) => {
-      setUserResponses(prev => ({ ...prev, immediateGoals: [userInput] }));
-      return `素晴らしい目標ですね！「${userInput}」を達成するために、あなたを動かす原動力は何でしょうか？\n\nなぜその目標を達成したいのか、心の奥底にある理由を教えてください。`;
+      setVisionData(prev => ({ ...prev, motivation: userInput }));
+      return `とても深い洞察ですね。「${userInput}」があなたの原動力なのですね。❤️\n\nでは、この目標達成を阻む可能性のある障害や課題は何でしょうか？\n\n例えば：\n• 時間の不足\n• 資金の制約\n• 知識・スキルの不足\n• 周囲の理解不足\n• モチベーションの維持\n\n正直に教えてください。課題を明確にすることで、対策を立てることができます。`;
     },
     5: (userInput: string) => {
-      setUserResponses(prev => ({ ...prev, motivation: userInput }));
-      return `ありがとうございます！これまでのお話から、あなたの人生のコンパスを作成いたします。\n\n少し時間をいただいて、あなただけの将来設計をまとめますね...`;
+      const obstacles = userInput.split(/[,、]/).map(o => o.trim()).filter(o => o);
+      setVisionData(prev => ({ ...prev, obstacles }));
+      return `なるほど、「${obstacles.join('」「')}」が主な課題なのですね。🔍\n\nでは、これらの課題を克服するために、あなたが活用できるリソースやサポートは何でしょうか？\n\n例えば：\n• 家族・友人のサポート\n• オンライン学習プラットフォーム\n• メンターやコーチ\n• コミュニティやネットワーク\n• 書籍や教材\n• 時間管理ツール\n\nあなたが持っている、またはアクセスできるリソースを教えてください。`;
+    },
+    6: (userInput: string) => {
+      const resources = userInput.split(/[,、]/).map(r => r.trim()).filter(r => r);
+      setVisionData(prev => ({ ...prev, resources }));
+      return `素晴らしいリソースですね！「${resources.join('」「')}」を活用することで、課題を克服できる可能性が高まります。🚀\n\nこれまでのお話から、あなたの将来指針を作成いたします。\n\n少し時間をいただいて、あなただけのカスタマイズされた将来指針をまとめますね...`;
     }
   };
 
@@ -122,24 +134,21 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
       setMessages(prev => [...prev, aiMessage]);
       setIsTyping(false);
 
-      if (step >= 5) {
-        // Complete onboarding after final message
+      if (step >= 6) {
+        // Complete vision creation after final message
         setTimeout(() => {
           const summaryMessage: Message = {
             id: (Date.now() + 2).toString(),
-            text: `🎯 **あなたの人生のコンパス**\n\n**価値観**: ${userResponses.coreValues.join('、')}\n**理想像**: ${userResponses.futureVision}\n**主な課題**: ${userResponses.currentChallenges.join('、')}\n**今年の目標**: ${userResponses.immediateGoals.join('、')}\n**原動力**: ${userResponses.motivation}\n\nこの内容をもとに、具体的な目標とタスクを設定していきましょう！`,
+            text: `🎯 **あなたの将来指針**\n\n**3年後のビジョン**: ${visionData.longTerm.join('、')}\n**1年以内の目標**: ${visionData.mediumTerm.join('、')}\n**3ヶ月以内のアクション**: ${visionData.shortTerm.join('、')}\n**原動力**: ${visionData.motivation}\n**主な課題**: ${visionData.obstacles.join('、')}\n**活用リソース**: ${visionData.resources.join('、')}\n\nこの将来指針をもとに、具体的な行動計画を立てていきましょう！`,
             sender: 'ai',
             timestamp: new Date()
           };
           setMessages(prev => [...prev, summaryMessage]);
           
           setTimeout(() => {
-            updateUser({ 
-              hasCompletedOnboarding: true,
-              futureVision: userResponses.futureVision,
-              coreValues: userResponses.coreValues
-            });
-            onComplete();
+            if (onComplete) {
+              onComplete(visionData);
+            }
           }, 3000);
         }, 2000);
       } else {
@@ -150,22 +159,24 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
 
   const getStepIcon = (step: number) => {
     switch (step) {
-      case 1: return <Heart className="h-4 w-4" />;
-      case 2: return <Target className="h-4 w-4" />;
-      case 3: return <Lightbulb className="h-4 w-4" />;
-      case 4: return <Star className="h-4 w-4" />;
-      case 5: return <Sparkles className="h-4 w-4" />;
+      case 1: return <Target className="h-4 w-4" />;
+      case 2: return <Calendar className="h-4 w-4" />;
+      case 3: return <TrendingUp className="h-4 w-4" />;
+      case 4: return <Heart className="h-4 w-4" />;
+      case 5: return <Lightbulb className="h-4 w-4" />;
+      case 6: return <Sparkles className="h-4 w-4" />;
       default: return <Sparkles className="h-4 w-4" />;
     }
   };
 
   const getStepTitle = (step: number) => {
     switch (step) {
-      case 1: return '価値観の発見';
-      case 2: return '理想像の設定';
-      case 3: return '課題の特定';
-      case 4: return '目標の設定';
-      case 5: return '原動力の発見';
+      case 1: return '3年後のビジョン';
+      case 2: return '1年以内の目標';
+      case 3: return '3ヶ月以内のアクション';
+      case 4: return '原動力の発見';
+      case 5: return '課題の特定';
+      case 6: return 'リソースの整理';
       default: return '完了';
     }
   };
@@ -182,11 +193,19 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
                 <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-white">AIガイド付きオンボーディング</h1>
-                <p className="text-sm text-gray-300">あなたの価値観と理想像を一緒に発見しましょう</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-white">将来指針作成AI</h1>
+                <p className="text-sm text-gray-300">あなたの未来を一緒に設計しましょう</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="p-2 text-gray-300 hover:text-white transition-colors"
+                >
+                  ← 戻る
+                </button>
+              )}
               <button
                 onClick={toggleTheme}
                 className="p-2 text-gray-300 hover:text-white transition-colors"
@@ -209,12 +228,12 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
                 {getStepIcon(step)}
                 <span>{getStepTitle(step)}</span>
               </span>
-              <span>{step}/5</span>
+              <span>{step}/6</span>
             </div>
             <div className="w-full bg-white/20 rounded-full h-2">
               <div 
                 className="bg-white rounded-full h-2 transition-all duration-500"
-                style={{ width: `${(step / 5) * 100}%` }}
+                style={{ width: `${(step / 6) * 100}%` }}
               />
             </div>
           </div>
@@ -304,4 +323,4 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
       </div>
     </div>
   );
-}
+} 

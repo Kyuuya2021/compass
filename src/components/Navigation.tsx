@@ -9,12 +9,13 @@ import {
   LogOut,
   User,
   Moon,
-  Sun
+  Sun,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
-type View = 'dashboard' | 'goals' | 'tasks' | 'progress';
+type View = 'dashboard' | 'goals' | 'tasks' | 'progress' | 'future-vision';
 
 interface NavigationProps {
   currentView: View;
@@ -30,6 +31,7 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
     { id: 'goals' as View, label: '目標管理', icon: Target },
     { id: 'tasks' as View, label: 'タスク管理', icon: CheckSquare },
     { id: 'progress' as View, label: '進捗分析', icon: TrendingUp },
+    { id: 'future-vision' as View, label: '将来指針', icon: Sparkles },
   ];
 
   return (
