@@ -19,6 +19,8 @@ import {
   Users,
   Home,
   Globe
+  Plus,
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoals } from '../contexts/GoalContext';
@@ -49,9 +51,18 @@ interface VisionData {
 
 export function FutureVisionDashboard() {
   const { user } = useAuth();
-  const { goals, tasks, getTodaysTasks, updateTask, calculateTaskImpactScore, getTaskHierarchyPath } = useGoals();
+  const { goals, tasks, getTodaysTasks, updateTask, addTask, calculateTaskImpactScore, getTaskHierarchyPath } = useGoals();
   const [visionData, setVisionData] = useState<VisionData | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month'>('day');
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [taskFormData, setTaskFormData] = useState({
+    title: '',
+    description: '',
+    goalId: '',
+    dueTime: '',
+    estimatedDuration: 30,
+    priority: 'medium' as 'high' | 'medium' | 'low'
+  });
   const [dailyReflection, setDailyReflection] = useState({
     alignment: '',
     valuesMoment: '',
@@ -70,6 +81,101 @@ export function FutureVisionDashboard() {
     });
   };
 
+  const generateVisionConnection = (taskData: typeof taskFormData, goalTitle?: string) => {
+    // 簡単なルールベースでビジョン接続を生成
+    const connections = {
+      '英語': {
+        coreVisionRelevance: '国際的なコミュニケーション能力向上',
+        valueAlignment: ['成長・学習', '社会貢献'],
+        impactScore: 7.0,
+        whyStatement: 'グローバルに活躍するエンジニアとして、英語でのコミュニケーション能力は必須スキル'
+      },
+      'プログラミング': {
+        coreVisionRelevance: '革新的ソリューション提供力の強化',
+        valueAlignment: ['成長・学習', '創造・革新'],
+        impactScore: 8.0,
+        whyStatement: '最新技術を習得し、より効率的で革新的なソリューションを提供'
+      },
+      '運動': {
+        coreVisionRelevance: '健康的で持続可能なライフスタイル',
+        valueAlignment: ['自律・自由', '家族・関係'],
+        impactScore: 6.5,
+        whyStatement: '健康な体と心を維持し、長期的に理想を実現し続ける基盤作り'
+      },
+      '家族': {
+        coreVisionRelevance: '家族との時間を大切にするライフスタイル',
+        valueAlignment: ['家族・関係', '自律・自由'],
+        impactScore: 9.0,
+        whyStatement: '理想のワークライフバランスを実現し、大切な人との絆を深める'
+      },
+      '学習': {
+        coreVisionRelevance: '継続的な成長と自己実現',
+        valueAlignment: ['成長・学習'],
+        impactScore: 7.5,
+        whyStatement: '新しい知識とスキルを身につけ、理想の自分に近づく'
+      },
+      '読書': {
+        coreVisionRelevance: '知識と洞察力の向上',
+        valueAlignment: ['成長・学習', '創造・革新'],
+        impactScore: 6.8,
+        whyStatement: '多様な視点と深い知識を得て、より良い判断と創造的な解決策を生み出す'
+      }
+    };
+
+    // タスクタイトルや説明からキーワードを検索
+    const taskText = `${taskData.title} ${taskData.description}`.toLowerCase();
+    
+    for (const [keyword, connection] of Object.entries(connections)) {
+      if (taskText.includes(keyword.toLowerCase())) {
+        return connection;
+      }
+    }
+
+    // デフォルト接続
+    return {
+      coreVisionRelevance: '理想の実現に向けた日々の積み重ね',
+      valueAlignment: ['成長・学習'],
+      impactScore: 5.0,
+      whyStatement: '小さな一歩一歩が理想の未来への確実な前進となります'
+    };
+  };
+
+  const handleCreateTask = () => {
+    if (!taskFormData.title.trim()) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const goalTitle = goals.find(g => g.id === taskFormData.goalId)?.title;
+    const visionConnection = generateVisionConnection(taskFormData, goalTitle);
+    
+    const newTask = {
+      title: taskFormData.title,
+      description: taskFormData.description,
+      goalId: taskFormData.goalId,
+      dueDate: today,
+      dueTime: taskFormData.dueTime,
+      estimatedDuration: taskFormData.estimatedDuration,
+      timeGranularity: 'daily' as const,
+      priority: taskFormData.priority,
+      status: 'pending' as const,
+      scheduledStart: taskFormData.dueTime ? `${today}T${taskFormData.dueTime}:00` : undefined,
+      scheduledEnd: taskFormData.dueTime && taskFormData.estimatedDuration ? 
+        new Date(new Date(`${today}T${taskFormData.dueTime}:00`).getTime() + taskFormData.estimatedDuration * 60000).toISOString() : undefined,
+      visionConnection
+    };
+
+    addTask(newTask);
+    
+    // フォームをリセット
+    setTaskFormData({
+      title: '',
+      description: '',
+      goalId: '',
+      dueTime: '',
+      estimatedDuration: 30,
+      priority: 'medium'
+    });
+    setShowTaskForm(false);
+  };
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'text-red-600 bg-red-100 border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-800';
@@ -278,11 +384,143 @@ export function FutureVisionDashboard() {
                   <CheckCircle className="h-5 w-5" />
                   <span>今日のアクション</span>
                 </h2>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  完了率: {completionRate}% ({completedTasks.length}/{todaysTasks.length})
+                <div className="flex items-center space-x-3">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    完了率: {completionRate}% ({completedTasks.length}/{todaysTasks.length})
+                  </div>
+                  <button
+                    onClick={() => setShowTaskForm(true)}
+                    className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors flex items-center space-x-1"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>タスク追加</span>
+                  </button>
                 </div>
               </div>
             </div>
+            
+            {/* Task Creation Form */}
+            {showTaskForm && (
+              <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">新しいタスクを追加</h3>
+                  <button
+                    onClick={() => setShowTaskForm(false)}
+                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      タスク名 *
+                    </label>
+                    <input
+                      type="text"
+                      value={taskFormData.title}
+                      onChange={(e) => setTaskFormData({ ...taskFormData, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder="今日取り組むタスクを入力"
+                    />
+                  </div>
+                  
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        関連目標
+                      </label>
+                      <select
+                        value={taskFormData.goalId}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, goalId: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      >
+                        <option value="">目標を選択（任意）</option>
+                        {goals.map((goal) => (
+                          <option key={goal.id} value={goal.id}>
+                            {goal.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        優先度
+                      </label>
+                      <select
+                        value={taskFormData.priority}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, priority: e.target.value as 'high' | 'medium' | 'low' })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      >
+                        <option value="high">高優先度</option>
+                        <option value="medium">中優先度</option>
+                        <option value="low">低優先度</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        予定時刻
+                      </label>
+                      <input
+                        type="time"
+                        value={taskFormData.dueTime}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, dueTime: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        所要時間（分）
+                      </label>
+                      <input
+                        type="number"
+                        value={taskFormData.estimatedDuration}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, estimatedDuration: parseInt(e.target.value) || 30 })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        min="5"
+                        max="480"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      詳細（任意）
+                    </label>
+                    <textarea
+                      value={taskFormData.description}
+                      onChange={(e) => setTaskFormData({ ...taskFormData, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      rows={2}
+                      placeholder="タスクの詳細や実行方法を記入"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end space-x-3 pt-2">
+                    <button
+                      onClick={() => setShowTaskForm(false)}
+                      className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      onClick={handleCreateTask}
+                      disabled={!taskFormData.title.trim()}
+                      className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      追加
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="p-4 sm:p-6 space-y-4">
               {todaysTasks.length > 0 ? (
                 todaysTasks.map((task) => {
