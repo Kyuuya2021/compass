@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Target, Lightbulb, Star, Mic, Plus, Globe, Calendar, TrendingUp, Heart } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Target, Lightbulb, Star, Mic, Plus, Globe, Calendar, TrendingUp, Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { GlassFilter } from './ui/liquid-glass';
@@ -201,9 +201,10 @@ export function FutureVisionChat({ onComplete, onBack }: FutureVisionChatProps) 
               {onBack && (
                 <button
                   onClick={onBack}
-                  className="p-2 text-gray-300 hover:text-white transition-colors"
+                  className="p-2 text-gray-300 hover:text-white transition-colors flex items-center space-x-1"
                 >
-                  ← 戻る
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>戻る</span>
                 </button>
               )}
               <button

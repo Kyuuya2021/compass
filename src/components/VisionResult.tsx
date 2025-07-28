@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, Calendar, TrendingUp, Heart, Lightbulb, Sparkles, ArrowRight, Download, Share2, Edit } from 'lucide-react';
+import { Target, Calendar, TrendingUp, Heart, Lightbulb, Sparkles, ArrowRight, Download, Share2, Edit, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { GlassFilter } from './ui/liquid-glass';
 
@@ -93,9 +93,10 @@ ${visionData.resources.map(resource => `- ${resource}`).join('\n')}
               {onBack && (
                 <button
                   onClick={onBack}
-                  className="p-2 text-gray-300 hover:text-white transition-colors"
+                  className="p-2 text-gray-300 hover:text-white transition-colors flex items-center space-x-1"
                 >
-                  ← 戻る
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>戻る</span>
                 </button>
               )}
               <button
