@@ -32,6 +32,53 @@ export function TaskManagement() {
     priority: 'medium' as Task['priority']
   });
 
+  const generateVisionConnection = (task: Omit<Task, 'id'>, goalTitle?: string) => {
+    // 簡単なルールベースでビジョン接続を生成
+    const connections = {
+      '英語': {
+        coreVisionRelevance: '国際的なコミュニケーション能力向上',
+        valueAlignment: ['成長・学習', '社会貢献'],
+        impactScore: 7.0,
+        whyStatement: 'グローバルに活躍するエンジニアとして、英語でのコミュニケーション能力は必須スキル'
+      },
+      'プログラミング': {
+        coreVisionRelevance: '革新的ソリューション提供力の強化',
+        valueAlignment: ['成長・学習', '創造・革新'],
+        impactScore: 8.0,
+        whyStatement: '最新技術を習得し、より効率的で革新的なソリューションを提供'
+      },
+      '運動': {
+        coreVisionRelevance: '健康的で持続可能なライフスタイル',
+        valueAlignment: ['自律・自由', '家族・関係'],
+        impactScore: 6.5,
+        whyStatement: '健康な体と心を維持し、長期的に理想を実現し続ける基盤作り'
+      },
+      '家族': {
+        coreVisionRelevance: '家族との時間を大切にするライフスタイル',
+        valueAlignment: ['家族・関係', '自律・自由'],
+        impactScore: 9.0,
+        whyStatement: '理想のワークライフバランスを実現し、大切な人との絆を深める'
+      }
+    };
+
+    // タスクタイトルや説明からキーワードを検索
+    const taskText = `${task.title} ${task.description}`.toLowerCase();
+    
+    for (const [keyword, connection] of Object.entries(connections)) {
+      if (taskText.includes(keyword.toLowerCase())) {
+        return connection;
+      }
+    }
+
+    // デフォルト接続
+    return {
+      coreVisionRelevance: '理想の実現に向けた日々の積み重ね',
+      valueAlignment: ['成長・学習'],
+      impactScore: 5.0,
+      whyStatement: '小さな一歩一歩が理想の未来への確実な前進となります'
+    };
+  };
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -69,7 +116,13 @@ export function TaskManagement() {
     if (editingTask) {
       updateTask(editingTask.id, taskData);
     } else {
-      addTask(taskData);
+      const goalTitle = goals.find(g => g.id === taskData.goalId)?.title;
+      const visionConnection = generateVisionConnection(taskData, goalTitle);
+      
+      addTask({
+        ...taskData,
+        visionConnection
+      });
     }
     
     resetForm();

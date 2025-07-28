@@ -63,6 +63,42 @@ export function FutureVisionDashboard() {
   const completedTasks = todaysTasks.filter(t => t.status === 'completed');
   const completionRate = todaysTasks.length > 0 ? Math.round((completedTasks.length / todaysTasks.length) * 100) : 0;
 
+  const handleCompleteTask = (taskId: string) => {
+    updateTask(taskId, { 
+      status: 'completed',
+      completedAt: new Date().toISOString()
+    });
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'text-red-600 bg-red-100 border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-800';
+      case 'medium': return 'text-yellow-600 bg-yellow-100 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300 dark:border-yellow-800';
+      case 'low': return 'text-green-600 bg-green-100 border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-800';
+      default: return 'text-gray-600 bg-gray-100 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
+    }
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'high': return '高';
+      case 'medium': return '中';
+      case 'low': return '低';
+      default: return '';
+    }
+  };
+
+  const getValueIcon = (value: string) => {
+    switch (value) {
+      case '成長・学習': return '🌱';
+      case '社会貢献': return '🤝';
+      case '自律・自由': return '🏃';
+      case '家族・関係': return '👨‍👩‍👧‍👦';
+      case '創造・革新': return '💡';
+      default: return '💎';
+    }
+  };
+
   useEffect(() => {
     // Mock vision data - in real app, this would come from the onboarding results
     setVisionData({
@@ -248,14 +284,19 @@ export function FutureVisionDashboard() {
               </div>
             </div>
             <div className="p-4 sm:p-6 space-y-4">
-              {todaysTasks.map((task) => {
-                const taskGoal = goals.find(g => g.id === task.goalId);
+              {todaysTasks.length > 0 ? (
+                todaysTasks.map((task) => {
+                  const taskGoal = goals.find(g => g.id === task.goalId);
+                  const hierarchyPath = getTaskHierarchyPath(task.id);
+                  const impactScore = calculateTaskImpactScore(task);
+                  
                 return (
                   <div key={task.id} className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-gray-700">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
                           <button
+                            onClick={() => handleCompleteTask(task.id)}
                             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                               task.status === 'completed'
                                 ? 'border-gray-800 dark:border-gray-200 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
@@ -264,9 +305,16 @@ export function FutureVisionDashboard() {
                           >
                             {task.status === 'completed' && <CheckCircle className="h-3 w-3" />}
                           </button>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{task.title}</h3>
+                          <h3 className={`font-semibold ${task.status === 'completed' ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+                            {task.title}
+                          </h3>
+                          <span className={`text-xs font-medium px-2 py-1 rounded-full border ${getPriorityColor(task.priority)}`}>
+                            {getPriorityLabel(task.priority)}
+                          </span>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{task.description}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                          {task.description}
+                        </p>
                         
                         {/* Connection Hierarchy */}
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-3 mb-3 border border-gray-200 dark:border-gray-600">
@@ -274,20 +322,41 @@ export function FutureVisionDashboard() {
                           <div className="space-y-1 text-xs">
                             <div className="flex items-center space-x-2">
                               <Home className="h-3 w-3 text-gray-400" />
-                              <span className="text-gray-600 dark:text-gray-300">コアビジョン: 革新的ソリューション提供</span>
+                              <span className="text-gray-600 dark:text-gray-300">
+                                コアビジョン: {hierarchyPath.vision}
+                              </span>
                             </div>
-                            {taskGoal && (
+                            {hierarchyPath.goal && (
                               <div className="flex items-center space-x-2">
                                 <Target className="h-3 w-3 text-gray-400" />
-                                <span className="text-gray-600 dark:text-gray-300">目標: {taskGoal.title}</span>
+                                <span className="text-gray-600 dark:text-gray-300">目標: {hierarchyPath.goal}</span>
                               </div>
                             )}
                             <div className="flex items-center space-x-2">
                               <CheckCircle className="h-3 w-3 text-gray-400" />
-                              <span className="text-gray-600 dark:text-gray-300">今日: {task.title}</span>
+                              <span className="text-gray-600 dark:text-gray-300">今日: {hierarchyPath.task}</span>
                             </div>
                           </div>
                         </div>
+
+                        {/* Vision Connection */}
+                        {task.visionConnection && (
+                          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-3 border border-blue-200 dark:border-blue-800">
+                            <h4 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">💡 なぜこのタスクが重要？</h4>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mb-2">
+                              {task.visionConnection.whyStatement}
+                            </p>
+                            <div className="flex items-center space-x-2 text-xs">
+                              <span className="text-blue-500 dark:text-blue-400">価値観:</span>
+                              {task.visionConnection.valueAlignment.map((value, index) => (
+                                <span key={index} className="flex items-center space-x-1">
+                                  <span>{getValueIcon(value)}</span>
+                                  <span className="text-blue-600 dark:text-blue-300">{value}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                         <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
                           {task.dueTime && (
@@ -299,13 +368,22 @@ export function FutureVisionDashboard() {
                           {task.estimatedDuration && (
                             <span>{task.estimatedDuration}分</span>
                           )}
-                          <span className="text-blue-600 dark:text-blue-400 font-medium">🎖️ 実現寄与度: +2.3%</span>
+                          <span className="text-blue-600 dark:text-blue-400 font-medium">
+                            🎖️ 実現寄与度: +{impactScore.toFixed(1)}%
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 );
-              })}
+                })
+              ) : (
+                <div className="text-center py-8">
+                  <CheckCircle className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">今日のタスクはありません</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">新しいタスクを追加して目標に向けて進みましょう</p>
+                </div>
+              )}
             </div>
           </div>
 

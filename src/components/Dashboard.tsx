@@ -106,12 +106,29 @@ export function Dashboard() {
               {todaysTasks.length > 0 ? (
                 todaysTasks.map((task) => {
                   const taskGoal = goals.find(g => g.id === task.goalId);
+                  const isOverdue = (() => {
+                    const today = new Date();
+                    const dueDate = new Date(task.dueDate);
+                    dueDate.setHours(23, 59, 59, 999);
+                    today.setHours(0, 0, 0, 0);
+                    return dueDate < today && task.status !== 'completed';
+                  })();
+                  
                   return (
                     <div key={task.id} className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 hover:shadow-md transition-shadow touch-manipulation bg-gray-50 dark:bg-gray-700">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm sm:text-base break-words">{task.title}</h3>
                           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2 break-words">{task.description}</p>
+                          
+                          {/* Vision Connection */}
+                          {task.visionConnection && (
+                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2 mb-2 border border-blue-200 dark:border-blue-800">
+                              <p className="text-xs text-blue-600 dark:text-blue-400">
+                                💡 {task.visionConnection.whyStatement}
+                              </p>
+                            </div>
+                          )}
                           
                           {/* Time Info */}
                           <div className="flex items-center space-x-2 mb-2 text-xs text-gray-500 dark:text-gray-400">
@@ -124,6 +141,11 @@ export function Dashboard() {
                             {task.estimatedDuration && (
                               <span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
                                 {task.estimatedDuration}分
+                              </span>
+                            )}
+                            {isOverdue && (
+                              <span className="text-xs px-2 py-1 bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300 rounded-full">
+                                期限超過
                               </span>
                             )}
                           </div>
