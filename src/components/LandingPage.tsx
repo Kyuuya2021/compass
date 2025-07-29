@@ -196,7 +196,24 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* Pain Points Section */}
-      <section className="py-16 sm:py-24 bg-gray-50 dark:bg-gray-800">
+      <section className="relative py-16 sm:py-24">
+        {/* Background Waves */}
+        <div className="absolute inset-0 z-0">
+          <Waves
+            lineColor={theme === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}
+            backgroundColor="transparent"
+            waveSpeedX={0.01}
+            waveSpeedY={0.006}
+            waveAmpX={35}
+            waveAmpY={20}
+            friction={0.94}
+            tension={0.005}
+            maxCursorMove={100}
+            xGap={18}
+            yGap={40}
+          />
+        </div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -209,7 +226,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
 
           <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
             {painPoints.map((point, index) => (
-              <div key={index} className="bg-white dark:bg-gray-700 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-gray-600">
+              <div key={index} className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
                 <div className="flex items-start space-x-4">
                   <div className="text-3xl sm:text-4xl">{point.icon}</div>
                   <div>
@@ -228,7 +245,24 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* Solution Section */}
-      <section className="py-16 sm:py-24">
+      <section className="relative py-16 sm:py-24">
+        {/* Background Waves */}
+        <div className="absolute inset-0 z-0">
+          <Waves
+            lineColor={theme === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)"}
+            backgroundColor="transparent"
+            waveSpeedX={0.012}
+            waveSpeedY={0.007}
+            waveAmpX={40}
+            waveAmpY={22}
+            friction={0.93}
+            tension={0.007}
+            maxCursorMove={110}
+            xGap={16}
+            yGap={38}
+          />
+        </div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -242,11 +276,11 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
           <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center mb-16">
             {features.map((feature, index) => (
               <div key={index} className={`${index % 2 === 0 ? 'lg:order-1' : 'lg:order-2'}`}>
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                    <GlassIcon className="w-12 h-12">
                       {feature.icon}
-                    </div>
+                    </GlassIcon>
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                       {feature.title}
                     </h3>
@@ -266,7 +300,24 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* Vision Section */}
-      <section className="py-16 sm:py-24 bg-gray-900 dark:bg-gray-800 text-white">
+      <section className="relative py-16 sm:py-24 bg-gray-900 dark:bg-gray-800 text-white">
+        {/* Background Waves */}
+        <div className="absolute inset-0 z-0">
+          <Waves
+            lineColor="rgba(255, 255, 255, 0.08)"
+            backgroundColor="transparent"
+            waveSpeedX={0.008}
+            waveSpeedY={0.004}
+            waveAmpX={30}
+            waveAmpY={18}
+            friction={0.95}
+            tension={0.004}
+            maxCursorMove={90}
+            xGap={20}
+            yGap={45}
+          />
+        </div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
@@ -293,7 +344,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 Compassは単なるツールではありません。あなたの人生の伴走者として、迷った時には方向を示し、達成した時には共に喜ぶ、そんな存在でありたいと考えています。
               </p>
             </div>
-            <div className="bg-gray-800 dark:bg-gray-700 rounded-2xl p-6 sm:p-8">
+            <div className="relative bg-gray-800/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-700/50">
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <Star className="h-6 w-6 text-yellow-400" />
@@ -320,7 +371,24 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 sm:py-24">
+      <section className="relative py-16 sm:py-24">
+        {/* Background Waves */}
+        <div className="absolute inset-0 z-0">
+          <Waves
+            lineColor={theme === "dark" ? "rgba(255, 255, 255, 0.11)" : "rgba(0, 0, 0, 0.11)"}
+            backgroundColor="transparent"
+            waveSpeedX={0.013}
+            waveSpeedY={0.008}
+            waveAmpX={42}
+            waveAmpY={24}
+            friction={0.92}
+            tension={0.006}
+            maxCursorMove={115}
+            xGap={17}
+            yGap={36}
+          />
+        </div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -333,7 +401,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
 
           <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div key={index} className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
                 <div className="flex items-center space-x-4 mb-4">
                   <img 
                     src={testimonial.image} 
@@ -349,7 +417,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
                   {testimonial.quote}
                 </p>
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                <div className="bg-blue-50/80 dark:bg-blue-900/30 backdrop-blur-sm rounded-lg p-3 border border-blue-200/50 dark:border-blue-800/50">
                   <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
                     📈 {testimonial.achievement}
                   </p>
@@ -361,7 +429,24 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 sm:py-24 bg-gray-50 dark:bg-gray-800">
+      <section className="relative py-16 sm:py-24">
+        {/* Background Waves */}
+        <div className="absolute inset-0 z-0">
+          <Waves
+            lineColor={theme === "dark" ? "rgba(255, 255, 255, 0.09)" : "rgba(0, 0, 0, 0.09)"}
+            backgroundColor="transparent"
+            waveSpeedX={0.009}
+            waveSpeedY={0.005}
+            waveAmpX={32}
+            waveAmpY={19}
+            friction={0.96}
+            tension={0.003}
+            maxCursorMove={85}
+            xGap={22}
+            yGap={42}
+          />
+        </div>
+        
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -374,7 +459,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
 
           <div className="space-y-6">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-white dark:bg-gray-700 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-gray-600">
+              <div key={index} className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3">
                   Q. {faq.question}
                 </h3>
@@ -388,7 +473,24 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-16 sm:py-24 bg-gray-900 dark:bg-gray-800 text-white">
+      <section className="relative py-16 sm:py-24 bg-gray-900 dark:bg-gray-800 text-white">
+        {/* Background Waves */}
+        <div className="absolute inset-0 z-0">
+          <Waves
+            lineColor="rgba(255, 255, 255, 0.07)"
+            backgroundColor="transparent"
+            waveSpeedX={0.007}
+            waveSpeedY={0.003}
+            waveAmpX={28}
+            waveAmpY={16}
+            friction={0.97}
+            tension={0.002}
+            maxCursorMove={80}
+            xGap={25}
+            yGap={48}
+          />
+        </div>
+        
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
             あなたの人生のコンパスを見つけませんか？
@@ -400,12 +502,12 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
           <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
             <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto bg-white text-gray-900 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2"
+              className="relative w-full sm:w-auto bg-white/90 backdrop-blur-sm text-gray-900 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white transition-colors flex items-center justify-center space-x-2 shadow-lg border border-white/20"
             >
               <span>無料で始める</span>
               <ArrowRight className="h-5 w-5" />
             </button>
-            <button className="w-full sm:w-auto border border-gray-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2">
+            <button className="relative w-full sm:w-auto border border-gray-600/50 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-800/50 transition-colors flex items-center justify-center space-x-2">
               <Play className="h-5 w-5" />
               <span>デモを見る</span>
             </button>
