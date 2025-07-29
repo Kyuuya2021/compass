@@ -10,12 +10,15 @@ import {
   User,
   Moon,
   Sun,
-  Sparkles
+  Sparkles,
+  Brain,
+  Settings,
+  Database
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
-type View = 'dashboard' | 'goals' | 'tasks' | 'progress' | 'future-vision' | 'future-vision-dashboard' | 'value-analysis';
+type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result' | 'value-analysis' | 'ideal-self-designer' | 'data-management';
 
 interface NavigationProps {
   currentView: View;
@@ -27,13 +30,30 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
   const { theme, toggleTheme } = useTheme();
 
   const navItems = [
-    { id: 'dashboard' as View, label: 'ダッシュボード', icon: LayoutDashboard },
-    { id: 'goals' as View, label: '目標管理', icon: Target },
-    { id: 'tasks' as View, label: 'タスク管理', icon: CheckSquare },
-    { id: 'progress' as View, label: '進捗分析', icon: TrendingUp },
-    { id: 'future-vision' as View, label: '将来指針', icon: Sparkles },
-    { id: 'value-analysis' as View, label: '価値観分析', icon: Target },
-    { id: 'future-vision-dashboard' as View, label: '指針ダッシュボード', icon: Compass },
+    { 
+      id: 'dashboard' as View, 
+      label: 'ダッシュボード', 
+      icon: LayoutDashboard,
+      description: '今日の概要・統合ビュー'
+    },
+    { 
+      id: 'goals' as View, 
+      label: '目標管理', 
+      icon: Target,
+      description: '目標設定・タスク管理'
+    },
+    { 
+      id: 'value-analysis' as View, 
+      label: 'AI分析', 
+      icon: Brain,
+      description: '価値観・将来指針'
+    },
+    { 
+      id: 'data-management' as View, 
+      label: 'データ管理', 
+      icon: Database,
+      description: 'データのエクスポート・インポート'
+    },
   ];
 
   return (
@@ -85,14 +105,15 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
               <button
                 key={item.id}
                 onClick={() => onViewChange(item.id)}
-                className={`flex-1 py-2.5 px-1 text-xs font-medium transition-colors flex flex-col items-center space-y-1 min-h-[60px] ${
+                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 text-xs transition-colors ${
                   currentView === item.id
-                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    ? 'bg-blue-50 border-t-2 border-blue-500 text-blue-700 dark:bg-blue-950 dark:border-blue-400 dark:text-blue-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                 }`}
+                title={item.description}
               >
-                <Icon className="h-5 w-5" />
-                <span className="text-[10px] leading-tight text-center">{item.label}</span>
+                <Icon className="h-4 w-4 mb-1" />
+                <span className="text-xs">{item.label}</span>
               </button>
             );
           })}

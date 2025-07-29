@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export interface Goal {
   id: string;
@@ -58,154 +58,167 @@ interface GoalContextType {
   updateTaskVisionConnection: (taskId: string, connection: Task['visionConnection']) => void;
   calculateTaskImpactScore: (task: Task) => number;
   getTaskHierarchyPath: (taskId: string) => { vision: string; goal: string; task: string };
+  clearAllData: () => void;
+  exportData: () => string;
+  importData: (data: string) => boolean;
 }
 
 const GoalContext = createContext<GoalContextType | undefined>(undefined);
 
-export function GoalProvider({ children }: { children: ReactNode }) {
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: '1',
-      title: 'グローバルに活躍するエンジニアになる',
-      description: '技術力を磨き、世界中の人々と協働できるエンジニアとして成長する',
-      level: 1,
-      startDate: '2025-01-01',
-      endDate: '2035-01-01',
-      progress: 25,
-      status: 'active',
-      type: 'vision'
-    },
-    {
-      id: '2',
-      title: '3年以内に海外赴任する',
-      description: 'グローバルプロジェクトのリーダーとして海外で働く',
-      level: 2,
-      parentId: '1',
-      startDate: '2025-01-01',
-      endDate: '2028-01-01',
-      progress: 40,
-      status: 'active',
-      type: 'long-term'
-    },
-    {
-      id: '3',
-      title: '1年以内にTOEIC900点取得',
-      description: 'ビジネス英語力を向上させて国際的なコミュニケーション能力を身につける',
-      level: 3,
-      parentId: '2',
-      startDate: '2025-01-01',
-      endDate: '2026-01-01',
-      progress: 60,
-      status: 'active',
-      type: 'mid-term'
-    }
-  ]);
+// ローカルストレージのキー
+const STORAGE_KEYS = {
+  GOALS: 'compass_goals',
+  TASKS: 'compass_tasks',
+  USER_DATA: 'compass_user_data'
+};
 
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: '英単語50個暗記',
-      description: 'TOEIC頻出単語を覚える',
-      goalId: '3',
-      dueDate: '2025-01-29',
-      dueTime: '09:00',
-      estimatedDuration: 30,
-      timeGranularity: 'daily',
-      priority: 'high',
-      status: 'pending',
-      scheduledStart: '2025-01-29T08:30:00',
-      scheduledEnd: '2025-01-29T09:00:00',
-      visionConnection: {
-        coreVisionRelevance: '国際的なコミュニケーション能力向上',
-        valueAlignment: ['成長・学習', '社会貢献'],
-        impactScore: 7.5,
-        whyStatement: 'グローバルに活躍するエンジニアとして、英語でのコミュニケーション能力は必須スキル'
-      }
-    },
-    {
-      id: '2',
-      title: 'リスニング練習30分',
-      description: 'TOEIC Part3, 4の問題を解く',
-      goalId: '3',
-      dueDate: '2025-01-29',
-      dueTime: '19:00',
-      estimatedDuration: 30,
-      timeGranularity: 'daily',
-      priority: 'high',
-      status: 'pending',
-      scheduledStart: '2025-01-29T18:30:00',
-      scheduledEnd: '2025-01-29T19:00:00',
-      visionConnection: {
-        coreVisionRelevance: '国際的なコミュニケーション能力向上',
-        valueAlignment: ['成長・学習'],
-        impactScore: 6.8,
-        whyStatement: '英語での情報収集能力を高め、最新技術トレンドをキャッチアップ'
-      }
-    },
-    {
-      id: '3',
-      title: 'プログラミング学習1時間',
-      description: 'React.jsの新機能について学習',
-      goalId: '2',
-      dueDate: '2025-01-29',
-      dueTime: '20:00',
-      estimatedDuration: 60,
-      timeGranularity: 'daily',
-      priority: 'medium',
-      status: 'pending',
-      scheduledStart: '2025-01-29T20:00:00',
-      scheduledEnd: '2025-01-29T21:00:00',
-      visionConnection: {
-        coreVisionRelevance: '革新的ソリューション提供力の強化',
-        valueAlignment: ['成長・学習', '創造・革新'],
-        impactScore: 8.2,
-        whyStatement: '最新技術を習得し、より効率的で革新的なソリューションを提供'
-      }
-    },
-    {
-      id: '4',
-      title: '技術ブログ記事執筆',
-      description: '今週学んだReact Hooksについてまとめる',
-      goalId: '2',
-      dueDate: '2025-01-29',
-      dueTime: '21:30',
-      estimatedDuration: 45,
-      timeGranularity: 'daily',
-      priority: 'medium',
-      status: 'pending',
-      scheduledStart: '2025-01-29T21:30:00',
-      scheduledEnd: '2025-01-29T22:15:00',
-      visionConnection: {
-        coreVisionRelevance: '知識共有による社会貢献',
-        valueAlignment: ['社会貢献', '成長・学習'],
-        impactScore: 6.5,
-        whyStatement: '学んだ知識を共有し、他のエンジニアの成長をサポート'
-      }
-    },
-    {
-      id: '5',
-      title: '家族との夕食時間',
-      description: '今日の出来事を共有し、家族との時間を大切にする',
-      goalId: '1',
-      dueDate: '2025-01-29',
-      dueTime: '18:00',
-      estimatedDuration: 60,
-      timeGranularity: 'daily',
-      priority: 'high',
-      status: 'pending',
-      scheduledStart: '2025-01-29T18:00:00',
-      scheduledEnd: '2025-01-29T19:00:00',
-      visionConnection: {
-        coreVisionRelevance: '家族との時間を大切にするライフスタイル',
-        valueAlignment: ['家族・関係', '自律・自由'],
-        impactScore: 9.1,
-        whyStatement: '理想のワークライフバランスを実現し、大切な人との絆を深める'
-      }
+// ローカルストレージユーティリティ
+const storage = {
+  get: (key: string) => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : null;
+    } catch (error) {
+      console.error('Error reading from localStorage:', error);
+      return null;
     }
-  ]);
+  },
+  
+  set: (key: string, value: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (error) {
+      console.error('Error writing to localStorage:', error);
+      return false;
+    }
+  },
+  
+  remove: (key: string) => {
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      console.error('Error removing from localStorage:', error);
+      return false;
+    }
+  }
+};
+
+// デフォルトデータ
+const defaultGoals: Goal[] = [
+  {
+    id: '1',
+    title: 'グローバルに活躍するエンジニアになる',
+    description: '技術力を磨き、世界中の人々と協働できるエンジニアとして成長する',
+    level: 1,
+    startDate: '2025-01-01',
+    endDate: '2035-01-01',
+    progress: 25,
+    status: 'active',
+    type: 'vision'
+  },
+  {
+    id: '2',
+    title: '3年以内に海外赴任する',
+    description: 'グローバルプロジェクトのリーダーとして海外で働く',
+    level: 2,
+    parentId: '1',
+    startDate: '2025-01-01',
+    endDate: '2028-01-01',
+    progress: 40,
+    status: 'active',
+    type: 'long-term'
+  },
+  {
+    id: '3',
+    title: '1年以内にTOEIC900点取得',
+    description: 'ビジネス英語力を向上させて国際的なコミュニケーション能力を身につける',
+    level: 3,
+    parentId: '2',
+    startDate: '2025-01-01',
+    endDate: '2026-01-01',
+    progress: 60,
+    status: 'active',
+    type: 'mid-term'
+  }
+];
+
+const defaultTasks: Task[] = [
+  {
+    id: '1',
+    title: '英語学習アプリで毎日30分学習',
+    description: 'DuolingoやMemriseで日常的に英語に触れる',
+    goalId: '3',
+    dueDate: '2025-12-31',
+    dueTime: '09:00',
+    estimatedDuration: 30,
+    priority: 'high',
+    status: 'pending',
+    timeGranularity: 'daily'
+  },
+  {
+    id: '2',
+    title: '技術ブログを週1回更新',
+    description: '学んだ技術をアウトプットして知識を定着させる',
+    goalId: '1',
+    dueDate: '2025-12-31',
+    dueTime: '20:00',
+    estimatedDuration: 120,
+    priority: 'medium',
+    status: 'pending',
+    timeGranularity: 'weekly'
+  }
+];
+
+export function GoalProvider({ children }: { children: ReactNode }) {
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // 初期化時にローカルストレージからデータを読み込み
+  useEffect(() => {
+    const loadData = () => {
+      try {
+        // 保存されたデータを読み込み
+        const savedGoals = storage.get(STORAGE_KEYS.GOALS);
+        const savedTasks = storage.get(STORAGE_KEYS.TASKS);
+
+        // データが存在する場合は使用、存在しない場合はデフォルトデータを使用
+        setGoals(savedGoals || defaultGoals);
+        setTasks(savedTasks || defaultTasks);
+        
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Error loading data from localStorage:', error);
+        // エラーが発生した場合はデフォルトデータを使用
+        setGoals(defaultGoals);
+        setTasks(defaultTasks);
+        setIsInitialized(true);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // データが変更されたときにローカルストレージに保存
+  useEffect(() => {
+    if (isInitialized) {
+      storage.set(STORAGE_KEYS.GOALS, goals);
+    }
+  }, [goals, isInitialized]);
+
+  useEffect(() => {
+    if (isInitialized) {
+      storage.set(STORAGE_KEYS.TASKS, tasks);
+    }
+  }, [tasks, isInitialized]);
 
   const addGoal = (goal: Omit<Goal, 'id'>) => {
-    const newGoal = { ...goal, id: Date.now().toString() };
+    const newGoal: Goal = {
+      ...goal,
+      id: Date.now().toString()
+    };
     setGoals(prev => [...prev, newGoal]);
   };
 
@@ -217,10 +230,15 @@ export function GoalProvider({ children }: { children: ReactNode }) {
 
   const deleteGoal = (id: string) => {
     setGoals(prev => prev.filter(goal => goal.id !== id));
+    // 関連するタスクも削除
+    setTasks(prev => prev.filter(task => task.goalId !== id));
   };
 
   const addTask = (task: Omit<Task, 'id'>) => {
-    const newTask = { ...task, id: Date.now().toString() };
+    const newTask: Task = {
+      ...task,
+      id: Date.now().toString()
+    };
     setTasks(prev => [...prev, newTask]);
   };
 
@@ -240,19 +258,21 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     
     while (currentGoal) {
       hierarchy.unshift(currentGoal);
-      currentGoal = currentGoal.parentId 
-        ? goals.find(g => g.id === currentGoal!.parentId)
-        : undefined;
+      currentGoal = goals.find(g => g.id === currentGoal?.parentId);
     }
     
     return hierarchy;
   };
 
   const getTodaysTasks = () => {
-    const today = new Date().toISOString().split('T')[0];
-    return tasks.filter(task => 
-      task.dueDate === today && task.status !== 'completed'
-    );
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+    
+    return tasks.filter(task => {
+      const taskDate = new Date(task.dueDate);
+      const taskDateString = taskDate.toISOString().split('T')[0];
+      return taskDateString === todayString;
+    });
   };
 
   const getTasksWithVisionConnection = () => {
@@ -260,66 +280,112 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   };
 
   const updateTaskVisionConnection = (taskId: string, connection: Task['visionConnection']) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, visionConnection: connection } : task
-    ));
+    updateTask(taskId, { visionConnection: connection });
   };
 
   const calculateTaskImpactScore = (task: Task): number => {
-    if (task.visionConnection) {
-      return task.visionConnection.impactScore;
+    if (!task.visionConnection) return 0;
+    
+    let score = 0;
+    
+    // 優先度によるスコア
+    switch (task.priority) {
+      case 'high': score += 3; break;
+      case 'medium': score += 2; break;
+      case 'low': score += 1; break;
     }
     
-    // デフォルトスコア計算ロジック
-    let score = 5.0; // ベーススコア
-    
-    // 優先度による調整
-    if (task.priority === 'high') score += 2.0;
-    else if (task.priority === 'low') score -= 1.0;
-    
-    // 目標との関連性
-    const relatedGoal = goals.find(g => g.id === task.goalId);
-    if (relatedGoal) {
-      if (relatedGoal.type === 'vision') score += 3.0;
-      else if (relatedGoal.type === 'long-term') score += 2.0;
-      else if (relatedGoal.type === 'mid-term') score += 1.0;
+    // ビジョン接続によるスコア
+    if (task.visionConnection.impactScore) {
+      score += task.visionConnection.impactScore;
     }
     
-    return Math.min(10, Math.max(0, score));
+    // 期限によるスコア（期限が近いほど高スコア）
+    const dueDate = new Date(task.dueDate);
+    const today = new Date();
+    const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilDue <= 0) score += 5; // 期限切れ
+    else if (daysUntilDue <= 3) score += 4; // 3日以内
+    else if (daysUntilDue <= 7) score += 3; // 1週間以内
+    else if (daysUntilDue <= 30) score += 2; // 1ヶ月以内
+    else score += 1;
+    
+    return Math.min(score, 10); // 最大10点
   };
 
   const getTaskHierarchyPath = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return { vision: '', goal: '', task: '' };
     
-    const relatedGoal = goals.find(g => g.id === task.goalId);
-    const hierarchy = relatedGoal ? getGoalHierarchy(relatedGoal.id) : [];
-    
-    const visionGoal = hierarchy.find(g => g.type === 'vision');
+    const goal = goals.find(g => g.id === task.goalId);
+    const vision = goals.find(g => g.id === goal?.parentId);
     
     return {
-      vision: visionGoal?.title || 'グローバルに活躍するエンジニアになる',
-      goal: relatedGoal?.title || '',
+      vision: vision?.title || '',
+      goal: goal?.title || '',
       task: task.title
     };
   };
-  return (
-    <GoalContext.Provider value={{
+
+  const clearAllData = () => {
+    setGoals(defaultGoals);
+    setTasks(defaultTasks);
+    storage.remove(STORAGE_KEYS.GOALS);
+    storage.remove(STORAGE_KEYS.TASKS);
+  };
+
+  const exportData = () => {
+    const data = {
       goals,
       tasks,
-      addGoal,
-      updateGoal,
-      deleteGoal,
-      addTask,
-      updateTask,
-      deleteTask,
-      getGoalHierarchy,
-      getTodaysTasks,
-      getTasksWithVisionConnection,
-      updateTaskVisionConnection,
-      calculateTaskImpactScore,
-      getTaskHierarchyPath
-    }}>
+      exportedAt: new Date().toISOString(),
+      version: '1.0.0'
+    };
+    return JSON.stringify(data, null, 2);
+  };
+
+  const importData = (dataString: string): boolean => {
+    try {
+      const data = JSON.parse(dataString);
+      
+      if (data.goals && Array.isArray(data.goals)) {
+        setGoals(data.goals);
+      }
+      
+      if (data.tasks && Array.isArray(data.tasks)) {
+        setTasks(data.tasks);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error importing data:', error);
+      return false;
+    }
+  };
+
+  const value: GoalContextType = {
+    goals,
+    tasks,
+    addGoal,
+    updateGoal,
+    deleteGoal,
+    addTask,
+    updateTask,
+    deleteTask,
+    getGoalHierarchy,
+    getTodaysTasks,
+    getTasksWithVisionConnection,
+    updateTaskVisionConnection,
+    calculateTaskImpactScore,
+    getTaskHierarchyPath,
+    clearAllData,
+    exportData,
+    importData
+  };
+
+  return (
+    <GoalContext.Provider value={value}>
       {children}
     </GoalContext.Provider>
   );

@@ -40,4 +40,12 @@ export {
   TableHead,
   TableHeader,
   TableRow,
-} from './table'; 
+} from './table';
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from './card'; 

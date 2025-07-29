@@ -11,9 +11,10 @@ import { GlassFilter } from './ui/liquid-glass';
 
 interface LandingPageProps {
   onGetStarted: () => void;
+  onSkipOnboarding?: () => void;
 }
 
-export function LandingPage({ onGetStarted }: LandingPageProps) {
+export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps) {
   const { theme, toggleTheme } = useTheme();
 
   const testimonials = [
@@ -512,6 +513,19 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
               <span>デモを見る</span>
             </button>
           </div>
+          
+          {/* Development Skip Button */}
+          {onSkipOnboarding && (
+            <div className="mt-8 pt-6 border-t border-gray-700">
+              <p className="text-sm text-gray-400 mb-3">開発用：オンボーディングをスキップ</p>
+              <button
+                onClick={onSkipOnboarding}
+                className="relative w-full sm:w-auto bg-red-600/80 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-medium text-sm hover:bg-red-600 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>スキップしてダッシュボードへ</span>
+              </button>
+            </div>
+          )}
 
           <p className="text-sm text-gray-400 mt-6">
             クレジットカード不要 • 3分で登録完了 • いつでも退会可能

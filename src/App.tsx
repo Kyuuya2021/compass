@@ -7,7 +7,8 @@ import { VisionResult } from './components/VisionResult';
 import { ValueAnalysisSystem } from './components/ValueAnalysisSystem';
 import { IdealSelfDesigner } from './components/IdealSelfDesigner';
 import { GoalManagement } from './components/GoalManagement';
-import { FutureVisionDashboard } from './components/FutureVisionDashboard';
+import { DataManagement } from './components/DataManagement';
+
 
 interface VisionData {
   shortTerm: string[];
@@ -48,10 +49,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GoalProvider } from './contexts/GoalContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
-type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result' | 'future-vision-dashboard' | 'value-analysis' | 'ideal-self-designer';
+type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result' | 'value-analysis' | 'ideal-self-designer' | 'data-management';
 
 function AppContent() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
   const [currentView, setCurrentView] = useState<View>('landing');
   const [visionData, setVisionData] = useState<VisionData | null>(null);
   const [valueAnalysis, setValueAnalysis] = useState<ValueEvolution | null>(null);
@@ -70,7 +71,20 @@ function AppContent() {
   }, [isAuthenticated, user]);
 
   if (!isAuthenticated) {
-    return <LandingPage onGetStarted={() => setCurrentView('onboarding')} />;
+    return (
+      <LandingPage 
+        onGetStarted={() => setCurrentView('onboarding')} 
+        onSkipOnboarding={() => {
+          // 開発用：オンボーディングをスキップしてダッシュボードに直接移動
+          updateUser({ 
+            hasCompletedOnboarding: true,
+            futureVision: "技術力と創造性を通じてビジネス課題解決に革新的ソリューションを提供し、自由度の高い働き方で家族との時間も大切にする",
+            coreValues: ["成長・学習", "社会貢献", "自律・自由", "家族・関係"]
+          });
+          setCurrentView('dashboard');
+        }}
+      />
+    );
   }
 
   if (currentView === 'onboarding') {
@@ -95,7 +109,7 @@ function AppContent() {
         valueAnalysis={valueAnalysis || undefined}
         onComplete={(profile) => {
           setIdealSelfProfile(profile);
-          setCurrentView('future-vision-dashboard');
+          setCurrentView('dashboard');
         }}
         onBack={() => setCurrentView('value-analysis')}
       />
@@ -107,7 +121,7 @@ function AppContent() {
       <FutureVisionChat 
         onComplete={(data) => {
           setVisionData(data);
-          setCurrentView('future-vision-dashboard');
+          setCurrentView('dashboard');
         }}
         onBack={() => setCurrentView('dashboard')}
       />
@@ -131,10 +145,8 @@ function AppContent() {
       <main className="pt-[74px] sm:pt-16">
         {currentView === 'dashboard' && <Dashboard />}
         {currentView === 'goals' && <GoalManagement />}
-        {currentView === 'tasks' && <TaskManagement />}
-        {currentView === 'progress' && <ProgressView />}
         {currentView === 'time' && <TimeManagement />}
-        {currentView === 'future-vision-dashboard' && <FutureVisionDashboard />}
+        {currentView === 'data-management' && <DataManagement />}
       </main>
     </div>
   );
