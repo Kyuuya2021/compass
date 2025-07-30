@@ -33,9 +33,10 @@ interface OnboardingData {
 
 interface AIOnboardingProps {
   onComplete: () => void;
+  onSkip?: () => void;
 }
 
-export function AIOnboarding({ onComplete }: AIOnboardingProps) {
+export function AIOnboarding({ onComplete, onSkip }: AIOnboardingProps) {
   const { updateUser } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
@@ -80,12 +81,12 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
     { title: '最終調整', icon: <CheckCircle className="h-4 w-4" />, description: 'あなたらしさを反映' }
   ];
 
-  const aiResponses = {
+  const aiResponses: Record<number, (userInput?: string) => string> = {
     0: () => {
       setSessionStarted(true);
       return `素晴らしいですね！それでは始めましょう。\n\n【これから行うこと】\n✓ 価値観の探索（あなたが大切にしていることを明確にします）\n✓ 理想像の明確化（未来のありたい姿を描きます）\n✓ 現状分析（今とのギャップを整理します）\n✓ ビジョン作成（AI分析による人生設計の草案作成）\n✓ 最終調整（あなたらしさを反映した完成版にします）\n\n所要時間: 約15分\n進行方法: 対話形式での質問と回答\n\nまず、あなたの価値観について探索していきます。価値観とは、あなたが人生で最も大切にしている信念や原則のことです。\n\n最初の質問です：\n「あなたが仕事や人生において、これだけは譲れないと感じることは何ですか？具体的なエピソードがあれば、それも教えてください。」`;
     },
-    1: (userInput: string) => {
+    1: (userInput: string = '') => {
       // 価値観分析
       const keywords = extractValueKeywords(userInput);
       setOnboardingData(prev => ({
@@ -95,7 +96,7 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
       
       return `「${userInput}」というお話から、あなたの大切な価値観が伝わってきます。✨\n\n少し深掘りさせてください。新しいことを学ぶとき、どんな瞬間に最もやりがいを感じますか？\n\nまた、周囲の人との関係で特に大切にしていることがあれば教えてください。理想のチームや仲間の関係性はどのようなものでしょうか？`;
     },
-    2: (userInput: string) => {
+    2: (userInput: string = '') => {
       setOnboardingData(prev => ({
         ...prev,
         values: { ...prev.values, secondary: { keywords: extractValueKeywords(userInput), examples: [userInput], intensity: 0.7 } }
@@ -103,7 +104,7 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
       
       return `価値観についてよく理解できました。あなたは成長と人間関係を大切にされているのですね。🌟\n\n次に、理想像について探索していきましょう。\n\n5年後のあなたを想像してみてください。理想的な一日がどのように始まり、どのように終わるでしょうか？\n\n• どんな仕事をしていますか？\n• どんな人たちと時間を過ごしていますか？\n• どんな環境で生活していますか？\n• その時のあなたは、どんな気持ちでいるでしょうか？\n\n自由に想像して教えてください。`;
     },
-    3: (userInput: string) => {
+    3: (userInput: string = '') => {
       setOnboardingData(prev => ({
         ...prev,
         ideals: { ...prev.ideals, fiveYear: userInput }
@@ -111,7 +112,7 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
       
       return `素晴らしい理想像ですね！「${userInput.substring(0, 50)}...」という未来に向かって歩んでいく姿が目に浮かびます。🎯\n\n次に現状について整理しましょう。理想像と比較して、現在の状況をどう感じていますか？\n\n• 最も満足している部分はどこですか？その理由は？\n• 最も変えたいと感じている部分はどこですか？\n• 現在のあなたが持っている強みや資源を教えてください（スキル・知識・経験・人脈など）\n\n正直にお答えいただければと思います。`;
     },
-    4: (userInput: string) => {
+    4: (userInput: string = '') => {
       setOnboardingData(prev => ({
         ...prev,
         currentState: { ...prev.currentState, analysis: userInput }
@@ -119,11 +120,11 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
       
       return `現状分析をありがとうございます。これまでのお話を統合して、あなたの人生ビジョンの草案を作成いたします。\n\n少し時間をいただいて、あなただけの「人生のコンパス」をまとめますね...`;
     },
-    5: (userInput: string) => {
+    5: (userInput: string = '') => {
       const visionDraft = generateVisionDraft(onboardingData, userInput);
       return `🎉 あなたの人生ビジョン（草案）が完成しました！\n\n## 🎯 コアビジョン\n「成長と貢献を通じて理想のライフスタイルを実現し、周囲の人々と共に価値を創造する」\n\n## 💎 あなたの価値観\n1. **成長・学習** - 新しい挑戦を通じた自己実現\n2. **人間関係** - 信頼できる仲間との協働\n3. **貢献・社会性** - 社会に価値を提供すること\n\n## 🌟 5年後の理想像\n${onboardingData.ideals.fiveYear}\n\n## 📊 現状分析サマリー\n現在の強みを活かしながら、理想の実現に向けて着実に歩んでいけると分析しています。\n\nこの草案をご覧いただいて：\n✓ あなたらしさが表現されていますか？\n✓ 心が躍るような内容になっていますか？\n✓ 実現したいと心から思える内容ですか？\n\n修正したい部分があれば教えてください。`;
     },
-    6: (userInput: string) => {
+    6: (userInput: string = '') => {
       return `素晴らしいビジョンが完成しました！🎉\n\n最後に確認させてください：\n✅ このビジョンは、あなたが本当に実現したい未来を表していますか？\n✅ 価値観や理想像に納得していますか？\n✅ 実現に向けて行動を始めたいと思えますか？\n\nこのビジョンを確定すると、あなた専用の目標設定画面に移り、具体的な行動計画の作成をサポートします。\n\n確定してもいつでも見直し・更新が可能ですので、現時点での「あなたの人生のコンパス」として活用していただければと思います。\n\nビジョンを確定いたしますか？`;
     }
   };
@@ -162,11 +163,7 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
       const aiResponse = aiResponses[phase as keyof typeof aiResponses];
       let responseText: string;
       
-      if (typeof aiResponse === 'function') {
-        responseText = aiResponse(currentInput);
-      } else {
-        responseText = aiResponse();
-      }
+      responseText = aiResponse(currentInput);
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -228,6 +225,14 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              {onSkip && (
+                <button
+                  onClick={onSkip}
+                  className="px-3 py-1.5 text-sm text-gray-300 hover:text-white border border-gray-600 hover:border-gray-400 rounded-lg transition-colors"
+                >
+                  スキップ
+                </button>
+              )}
               <button
                 onClick={toggleTheme}
                 className="p-2 text-gray-300 hover:text-white transition-colors"

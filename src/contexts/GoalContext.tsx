@@ -33,6 +33,14 @@ export interface Task {
     endDate?: string;
     exceptions?: string[];
   };
+  recurrence?: {
+    type: 'none' | 'daily' | 'weekly' | 'monthly' | 'custom';
+    interval?: number;
+    daysOfWeek?: number[];
+    dayOfMonth?: number;
+    endDate?: string;
+    maxOccurrences?: number;
+  };
   scheduledStart?: string;
   scheduledEnd?: string;
   visionConnection?: {

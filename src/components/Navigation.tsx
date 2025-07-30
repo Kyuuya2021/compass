@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Compass, 
   LayoutDashboard, 
@@ -13,12 +13,17 @@ import {
   Sparkles,
   Brain,
   Settings,
-  Database
+  Database,
+  ChevronDown,
+  Download,
+  Upload,
+  Trash2,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
-type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result' | 'value-analysis' | 'ideal-self-designer' | 'data-management';
+type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result' | 'value-analysis' | 'ideal-self-designer' | 'data-management' | 'profile-settings';
 
 interface NavigationProps {
   currentView: View;
@@ -28,6 +33,7 @@ interface NavigationProps {
 export function Navigation({ currentView, onViewChange }: NavigationProps) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [showSettings, setShowSettings] = useState(false);
 
   const navItems = [
     { 
@@ -38,9 +44,9 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
     },
     { 
       id: 'goals' as View, 
-      label: '目標管理', 
+      label: '進捗管理', 
       icon: Target,
-      description: '目標設定・タスク管理'
+      description: '目標設定・進捗追跡'
     },
     { 
       id: 'value-analysis' as View, 
@@ -48,12 +54,30 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
       icon: Brain,
       description: '価値観・将来指針'
     },
-    { 
-      id: 'data-management' as View, 
-      label: 'データ管理', 
+  ];
+
+  const settingsItems = [
+    {
+      id: 'data-management',
+      label: 'データ管理',
       icon: Database,
-      description: 'データのエクスポート・インポート'
+      description: 'データのエクスポート・インポート',
+      action: () => onViewChange('data-management' as View)
     },
+    {
+      id: 'profile',
+      label: 'プロフィール設定',
+      icon: User,
+      description: 'ユーザー情報の編集',
+      action: () => onViewChange('profile-settings' as View)
+    },
+    {
+      id: 'security',
+      label: 'セキュリティ',
+      icon: Shield,
+      description: 'パスワード変更・セキュリティ設定',
+      action: () => console.log('セキュリティ設定')
+    }
   ];
 
   return (
@@ -72,6 +96,51 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
               <User className="h-4 w-4" />
               <span>{user?.name}</span>
             </div>
+            
+            {/* Settings Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center space-x-1"
+                title="設定"
+              >
+                <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
+                <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
+              </button>
+              
+              {showSettings && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                  {settingsItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          item.action();
+                          setShowSettings(false);
+                        }}
+                        className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                  <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setShowSettings(false);
+                    }}
+                    className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>ログアウト</span>
+                  </button>
+                </div>
+              )}
+            </div>
+            
             <button
               onClick={toggleTheme}
               className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -84,13 +153,6 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
               ) : (
                 <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-current"></div>
               )}
-            </button>
-            <button
-              onClick={logout}
-              className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              title="ログアウト"
-            >
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </div>
@@ -119,6 +181,14 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
           })}
         </div>
       </div>
+      
+      {/* Click outside to close settings */}
+      {showSettings && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowSettings(false)}
+        />
+      )}
     </nav>
   );
 }

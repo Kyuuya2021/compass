@@ -1,22 +1,117 @@
 import React, { useState } from 'react';
-import { Plus, Calendar, Flag, CheckCircle, Clock, Edit, Trash2, Target, User } from 'lucide-react';
+import { Plus, Edit, Trash2, CheckSquare, Calendar, Target, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { useGoals, Task } from '../contexts/GoalContext';
-import { BreadcrumbNavigation } from './BreadcrumbNavigation';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Checkbox } from './ui/checkbox';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from './ui/table';
 
 export function TaskManagement() {
-  const { goals, tasks, addTask, updateTask, deleteTask } = useGoals();
+  const { tasks, goals, addTask, updateTask, deleteTask } = useGoals();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+
+  // 繰り返しタスクのインスタンスを生成する関数
+  const generateRecurringTaskInstances = (task: Task) => {
+    if (!task.recurrence || task.recurrence.type === 'none') {
+      return [task];
+    }
+
+    const instances = [];
+    const startDate = new Date(task.dueDate);
+    const endDate = task.recurrence.endDate ? new Date(task.recurrence.endDate) : null;
+    const maxOccurrences = task.recurrence.maxOccurrences || 0;
+    let currentDate = new Date(startDate);
+    let occurrenceCount = 0;
+
+    while (true) {
+      // 終了条件のチェック
+      if (endDate && currentDate > endDate) break;
+      if (maxOccurrences > 0 && occurrenceCount >= maxOccurrences) break;
+
+      // 日付の計算
+      let shouldInclude = false;
+      switch (task.recurrence.type) {
+        case 'daily':
+          shouldInclude = true;
+          currentDate.setDate(currentDate.getDate() + (task.recurrence.interval || 1));
+          break;
+        
+        case 'weekly':
+          if (task.recurrence.daysOfWeek && task.recurrence.daysOfWeek.length > 0) {
+            // 指定された曜日のみ
+            const currentDayOfWeek = currentDate.getDay();
+            if (task.recurrence.daysOfWeek.includes(currentDayOfWeek)) {
+              shouldInclude = true;
+            }
+          } else {
+            // 開始日の曜日で繰り返し
+            shouldInclude = true;
+          }
+          currentDate.setDate(currentDate.getDate() + 7 * (task.recurrence.interval || 1));
+          break;
+        
+        case 'monthly':
+          const currentDay = currentDate.getDate();
+          const targetDay = task.recurrence.dayOfMonth || 1;
+          if (currentDay === targetDay) {
+            shouldInclude = true;
+          }
+          currentDate.setMonth(currentDate.getMonth() + (task.recurrence.interval || 1));
+          break;
+        
+        default:
+          shouldInclude = true;
+          break;
+      }
+
+      if (shouldInclude) {
+        // 時間の設定
+        let taskTime = task.dueTime;
+        if (task.recurrence.type === 'weekly' && task.recurrence.daysOfWeek) {
+          const dayOfWeek = new Date(currentDate).getDay();
+          const weeklyTime = (task as any).weeklyTimes?.[dayOfWeek];
+          if (weeklyTime) {
+            taskTime = weeklyTime;
+          }
+        }
+
+        instances.push({
+          ...task,
+          id: `${task.id}_${occurrenceCount}`,
+          dueDate: currentDate.toISOString().split('T')[0],
+          dueTime: taskTime,
+          originalTaskId: task.id,
+          instanceNumber: occurrenceCount + 1
+        });
+        occurrenceCount++;
+      } else {
+        // 次の日付に進む
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // 無限ループ防止
+      if (occurrenceCount > 1000) break;
+    }
+
+    return instances;
+  };
+
+  // 繰り返しタスクを含むタスク一覧を取得
+  const getTasksWithInstances = () => {
+    const allInstances: (Task & { originalTaskId?: string; instanceNumber?: number })[] = [];
+    
+    tasks.forEach(task => {
+      const instances = generateRecurringTaskInstances(task);
+      allInstances.push(...instances);
+    });
+    
+    return allInstances;
+  };
+
+  const allTasks = getTasksWithInstances();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -166,7 +261,7 @@ export function TaskManagement() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedTasks(new Set(tasks.map(task => task.id)));
+      setSelectedTasks(new Set(allTasks.map(task => task.id)));
     } else {
       setSelectedTasks(new Set());
     }
@@ -208,7 +303,37 @@ export function TaskManagement() {
     }
   };
 
-  const groupedTasks = tasks.reduce((acc, task) => {
+  const getGoalTitle = (goalId: string) => {
+    const goal = goals.find(g => g.id === goalId);
+    return goal ? goal.title : '未設定';
+  };
+
+  const getGoalType = (goalId: string) => {
+    const goal = goals.find(g => g.id === goalId);
+    return goal ? goal.type : '';
+  };
+
+  const getGoalTypeColor = (type: string) => {
+    switch (type) {
+      case 'vision': return 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:border-purple-800';
+      case 'long-term': return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-800';
+      case 'mid-term': return 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900 dark:text-teal-300 dark:border-teal-800';
+      case 'short-term': return 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-800';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
+    }
+  };
+
+  const getGoalTypeLabel = (type: string) => {
+    switch (type) {
+      case 'vision': return 'ビジョン';
+      case 'long-term': return '長期目標';
+      case 'mid-term': return '中期目標';
+      case 'short-term': return '短期目標';
+      default: return '';
+    }
+  };
+
+  const groupedTasks = allTasks.reduce((acc, task) => {
     const status = task.status;
     if (!acc[status]) {
       acc[status] = [];
@@ -217,26 +342,37 @@ export function TaskManagement() {
     return acc;
   }, {} as Record<string, Task[]>);
 
-  const allSelected = tasks.length > 0 && selectedTasks.size === tasks.length;
-  const someSelected = selectedTasks.size > 0 && selectedTasks.size < tasks.length;
+  const allSelected = allTasks.length > 0 && selectedTasks.size === allTasks.length;
+  const someSelected = selectedTasks.size > 0 && selectedTasks.size < allTasks.length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">タスク管理</h1>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">目標達成に向けた日々のタスクを管理しましょう</p>
-      </div>
-
-      {/* Add Task Button */}
-      <div className="mb-6">
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors flex items-center space-x-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>タスク追加</span>
-        </button>
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">タスク管理</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+              目標達成に向けた日々のタスクを管理しましょう
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+              <span>総タスク数: {allTasks.length}</span>
+              <span className="text-green-600">•</span>
+              <span>完了: {allTasks.filter(t => t.status === 'completed').length}</span>
+              <span className="text-blue-600">•</span>
+              <span>繰り返し: {tasks.filter(t => t.recurrence && t.recurrence.type !== 'none').length}</span>
+            </div>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md"
+            >
+              <Plus className="h-4 w-4" />
+              <span>タスク追加</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Add/Edit Task Form */}
@@ -341,66 +477,108 @@ export function TaskManagement() {
       )}
 
       {/* Tasks Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">タスク一覧</h3>
+            <div className="flex items-center space-x-2">
+              {selectedTasks.size > 0 && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedTasks.size} 件選択中
+                  </span>
+                  <button
+                    onClick={() => {
+                      selectedTasks.forEach(taskId => {
+                        const task = allTasks.find(t => t.id === taskId);
+                        if (task) {
+                          updateTask(task.id, { status: 'completed' });
+                        }
+                      });
+                      setSelectedTasks(new Set());
+                    }}
+                    className="px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+                  >
+                    一括完了
+                  </button>
+                  <button
+                    onClick={() => setSelectedTasks(new Set())}
+                    className="px-3 py-1.5 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors"
+                  >
+                    選択解除
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>
+            <TableRow className="hover:bg-transparent bg-gray-50 dark:bg-gray-700/50">
+              <TableHead className="w-12">
                 <Checkbox 
                   checked={allSelected}
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
-              <TableHead>タスク</TableHead>
-              <TableHead>関連目標</TableHead>
-              <TableHead>期限</TableHead>
-              <TableHead>優先度</TableHead>
-              <TableHead>ステータス</TableHead>
-              <TableHead className="text-right">操作</TableHead>
+              <TableHead className="font-semibold">タスク</TableHead>
+              <TableHead className="font-semibold">関連目標</TableHead>
+              <TableHead className="font-semibold">期限</TableHead>
+              <TableHead className="font-semibold">優先度</TableHead>
+              <TableHead className="font-semibold">ステータス</TableHead>
+              <TableHead className="text-right font-semibold">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tasks.map((task) => {
+            {allTasks.map((task) => {
               const relatedGoal = goals.find(g => g.id === task.goalId);
               const today = new Date();
               const dueDate = new Date(task.dueDate);
               dueDate.setHours(23, 59, 59, 999);
               today.setHours(0, 0, 0, 0);
               const isOverdue = dueDate < today && task.status !== 'completed';
+              const isRecurringInstance = (task as any).originalTaskId && (task as any).instanceNumber;
               
               return (
-                <TableRow key={task.id} className="has-[[data-state=checked]]:bg-muted/50">
+                <TableRow key={task.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   <TableCell>
                     <Checkbox 
-                      id={`task-${task.id}`}
-                      checked={selectedTasks.has(task.id)}
-                      onCheckedChange={(checked) => handleSelectTask(task.id, checked as boolean)}
+                      id={`task-${task.id}`} 
+                      checked={selectedTasks.has(task.id)} 
+                      onCheckedChange={(checked) => handleSelectTask(task.id, checked as boolean)} 
                     />
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleToggleComplete(task)}
-                          className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                            task.status === 'completed'
-                              ? 'border-gray-800 dark:border-gray-200 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
-                              : 'border-gray-300 dark:border-gray-600 hover:border-gray-500 dark:hover:border-gray-400'
-                          }`}
-                        >
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-3">
+                        <button onClick={() => handleToggleComplete(task)} className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                          task.status === 'completed'
+                            ? 'border-green-600 bg-green-600 text-white'
+                            : 'border-gray-300 dark:border-gray-600 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
+                        }`}>
                           {task.status === 'completed' && <CheckCircle className="h-3 w-3" />}
                         </button>
-                        <span className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
-                          {task.title}
-                        </span>
-                        {isOverdue && (
-                          <span className="text-xs px-2 py-1 bg-red-100 text-red-600 rounded-full">
-                            期限超過
-                          </span>
-                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <span className={`font-medium text-sm ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                              {task.title}
+                            </span>
+                            {isRecurringInstance && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                                {(task as any).instanceNumber}回目
+                              </span>
+                            )}
+                          </div>
+                          {isOverdue && (
+                            <span className="ml-2 inline-block px-2 py-0.5 text-xs bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400 rounded-full">
+                              期限超過
+                            </span>
+                          )}
+                        </div>
                       </div>
                       {task.description && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 ml-8 line-clamp-2">
                           {task.description}
                         </p>
                       )}
@@ -408,47 +586,48 @@ export function TaskManagement() {
                   </TableCell>
                   <TableCell>
                     {relatedGoal ? (
-                      <div className="flex items-center space-x-2">
-                        <Target className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm">{relatedGoal.title}</span>
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <Target className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">{relatedGoal.title}</span>
+                        </div>
+                        <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full border ${getGoalTypeColor(relatedGoal.type)}`}>
+                          {getGoalTypeLabel(relatedGoal.type)}
+                        </span>
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400">なし</span>
+                      <span className="text-sm text-gray-400">未設定</span>
                     )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Calendar className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm">
-                        {new Date(task.dueDate).toLocaleDateString('ja-JP')}
-                        {task.dueTime && ` ${task.dueTime}`}
+                      <span className={`text-sm ${isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
+                        {task.dueDate}
                       </span>
+                      {task.dueTime && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {task.dueTime}
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(task.priority)}`}>
+                    <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(task.priority)}`}>
                       {getPriorityLabel(task.priority)}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(task.status)}`}>
+                    <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(task.status)}`}>
                       {getStatusLabel(task.status)}
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => handleEdit(task)}
-                        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        title="編集"
-                      >
+                    <div className="flex items-center justify-end space-x-1">
+                      <button onClick={() => handleEdit(task)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all duration-200">
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button
-                        onClick={() => deleteTask(task.id)}
-                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                        title="削除"
-                      >
+                      <button onClick={() => deleteTask(task.id)} className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all duration-200">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -459,11 +638,20 @@ export function TaskManagement() {
           </TableBody>
         </Table>
         
-        {tasks.length === 0 && (
+        {allTasks.length === 0 && (
           <div className="text-center py-12">
-            <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-            <p className="text-gray-500 dark:text-gray-400">タスクがありません</p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">新しいタスクを追加して始めましょう</p>
+            <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">タスクがありません</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              最初のタスクを作成して、目標達成に向けた一歩を踏み出しましょう
+            </p>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200"
+            >
+              <Plus className="h-4 w-4 mr-2 inline" />
+              タスクを追加
+            </button>
           </div>
         )}
       </div>
@@ -479,7 +667,7 @@ export function TaskManagement() {
               <button
                 onClick={() => {
                   selectedTasks.forEach(taskId => {
-                    const task = tasks.find(t => t.id === taskId);
+                    const task = allTasks.find(t => t.id === taskId);
                     if (task) {
                       handleToggleComplete(task);
                     }

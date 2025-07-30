@@ -135,16 +135,16 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
 
         {/* Content */}
         <div className="relative z-10">
-          {/* Header */}
-          <header className="px-4 sm:px-6 py-4">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Compass className="h-6 w-6 sm:h-8 sm:w-8 text-gray-900 dark:text-white" />
-                <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Compass</span>
-              </div>
+      {/* Header */}
+      <header className="px-4 sm:px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Compass className="h-6 w-6 sm:h-8 sm:w-8 text-gray-900 dark:text-white" />
+            <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Compass</span>
+          </div>
               {theme === 'light' ? (
                 <MoonIcon 
-                  onClick={toggleTheme}
+            onClick={toggleTheme}
                   className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                 />
               ) : (
@@ -152,27 +152,27 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
                   onClick={toggleTheme}
                   className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                 />
-              )}
-            </div>
-          </header>
+            )}
+        </div>
+      </header>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
             <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[80vh]">
-              {/* Left Side - Content */}
-              <div className="space-y-6 sm:space-y-8">
-                <div className="space-y-4 sm:space-y-6">
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
-                    人生のコンパスとなる
-                    <br />
-                    <span className="text-gray-600 dark:text-gray-300">AIコーチング</span>
-                  </h1>
-                  <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
-                    「なぜそれをやるのか」を常に意識しながら、AIとの対話を通じて理想の自分へと導きます。目標設定から日々のタスクまで、一気通貫でサポートします。
-                  </p>
-                </div>
+          {/* Left Side - Content */}
+          <div className="space-y-6 sm:space-y-8">
+            <div className="space-y-4 sm:space-y-6">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
+                人生のコンパスとなる
+                <br />
+                <span className="text-gray-600 dark:text-gray-300">AIコーチング</span>
+              </h1>
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
+                「なぜそれをやるのか」を常に意識しながら、AIとの対話を通じて理想の自分へと導きます。目標設定から日々のタスクまで、一気通貫でサポートします。
+              </p>
+            </div>
 
-                {/* Features */}
-                <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+            {/* Features */}
+            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                   {features.map((feature, index) => (
                     <div key={index} className="flex items-start space-x-3 sm:space-x-4">
                       <GlassIcon className="flex-shrink-0">
@@ -182,7 +182,7 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
                         <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">{feature.title}</h3>
                         <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{feature.description}</p>
                       </div>
-                    </div>
+                </div>
                   ))}
                 </div>
               </div>
@@ -223,14 +223,14 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               多くの人が抱える、目標達成や自己実現に関する共通の課題があります
             </p>
-          </div>
+                </div>
 
           <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
             {painPoints.map((point, index) => (
               <div key={index} className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
                 <div className="flex items-start space-x-4">
                   <div className="text-3xl sm:text-4xl">{point.icon}</div>
-                  <div>
+                <div>
                     <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
                       {point.title}
                     </h3>
@@ -262,8 +262,8 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
             xGap={16}
             yGap={38}
           />
-        </div>
-        
+              </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -292,7 +292,7 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
                   <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium">
                     <span>詳しく見る</span>
                     <ArrowRight className="h-4 w-4 ml-2" />
-                  </div>
+                </div>
                 </div>
               </div>
             ))}
@@ -317,8 +317,8 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
             xGap={20}
             yGap={45}
           />
-        </div>
-        
+              </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
@@ -344,7 +344,7 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
               <p className="text-gray-300 leading-relaxed">
                 Compassは単なるツールではありません。あなたの人生の伴走者として、迷った時には方向を示し、達成した時には共に喜ぶ、そんな存在でありたいと考えています。
               </p>
-            </div>
+                </div>
             <div className="relative bg-gray-800/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-700/50">
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
@@ -388,17 +388,17 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
             xGap={17}
             yGap={36}
           />
-        </div>
-        
+          </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               お客様の声
-            </h2>
+                </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Compassを使って人生が変わった方々の実体験をご紹介します
-            </p>
-          </div>
+                </p>
+              </div>
 
           <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
             {testimonials.map((testimonial, index) => (
@@ -501,7 +501,7 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
           </p>
           
           <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
-            <button
+                <button
               onClick={onGetStarted}
               className="relative w-full sm:w-auto bg-white/90 backdrop-blur-sm text-gray-900 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white transition-colors flex items-center justify-center space-x-2 shadow-lg border border-white/20"
             >
@@ -511,19 +511,19 @@ export function LandingPage({ onGetStarted, onSkipOnboarding }: LandingPageProps
             <button className="relative w-full sm:w-auto border border-gray-600/50 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-800/50 transition-colors flex items-center justify-center space-x-2">
               <Play className="h-5 w-5" />
               <span>デモを見る</span>
-            </button>
+                </button>
           </div>
-          
+
           {/* Development Skip Button */}
           {onSkipOnboarding && (
             <div className="mt-8 pt-6 border-t border-gray-700">
               <p className="text-sm text-gray-400 mb-3">開発用：オンボーディングをスキップ</p>
-              <button
+                <button
                 onClick={onSkipOnboarding}
                 className="relative w-full sm:w-auto bg-red-600/80 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-medium text-sm hover:bg-red-600 transition-colors flex items-center justify-center space-x-2"
-              >
+                >
                 <span>スキップしてダッシュボードへ</span>
-              </button>
+                </button>
             </div>
           )}
 

@@ -8,6 +8,7 @@ import { ValueAnalysisSystem } from './components/ValueAnalysisSystem';
 import { IdealSelfDesigner } from './components/IdealSelfDesigner';
 import { GoalManagement } from './components/GoalManagement';
 import { DataManagement } from './components/DataManagement';
+import { ProfileSettings } from './components/ProfileSettings';
 
 
 interface VisionData {
@@ -49,7 +50,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GoalProvider } from './contexts/GoalContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
-type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result' | 'value-analysis' | 'ideal-self-designer' | 'data-management';
+type View = 'landing' | 'onboarding' | 'dashboard' | 'goals' | 'tasks' | 'progress' | 'time' | 'future-vision' | 'vision-result' | 'value-analysis' | 'ideal-self-designer' | 'data-management' | 'profile-settings';
 
 function AppContent() {
   const { user, isAuthenticated, updateUser } = useAuth();
@@ -88,7 +89,20 @@ function AppContent() {
   }
 
   if (currentView === 'onboarding') {
-    return <AIOnboarding onComplete={() => setCurrentView('dashboard')} />;
+    return (
+      <AIOnboarding 
+        onComplete={() => setCurrentView('dashboard')} 
+        onSkip={() => {
+          // オンボーディングをスキップしてダッシュボードに直接移動
+          updateUser({ 
+            hasCompletedOnboarding: true,
+            futureVision: "技術力と創造性を通じてビジネス課題解決に革新的ソリューションを提供し、自由度の高い働き方で家族との時間も大切にする",
+            coreValues: ["成長・学習", "社会貢献", "自律・自由", "家族・関係"]
+          });
+          setCurrentView('dashboard');
+        }}
+      />
+    );
   }
 
   if (currentView === 'value-analysis') {
@@ -138,6 +152,10 @@ function AppContent() {
     );
   }
 
+  if (currentView === 'profile-settings') {
+    return <ProfileSettings onBack={() => setCurrentView('dashboard')} />;
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
       <Navigation currentView={currentView} onViewChange={setCurrentView} />
@@ -147,6 +165,7 @@ function AppContent() {
         {currentView === 'goals' && <GoalManagement />}
         {currentView === 'time' && <TimeManagement />}
         {currentView === 'data-management' && <DataManagement />}
+        {currentView === 'profile-settings' && <ProfileSettings onBack={() => setCurrentView('dashboard')} />}
       </main>
     </div>
   );
